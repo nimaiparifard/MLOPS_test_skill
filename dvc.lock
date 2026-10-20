@@ -1,0 +1,78 @@
+schema: '2.0'
+stages:
+  create_dataset:
+    cmd: python create_dataset.py
+    deps:
+    - path: create_dataset.py
+      hash: md5
+      md5: b9daf914ef67fe4427fa88ab4392ba83
+      size: 1017
+    params:
+      params.yaml:
+        dataset:
+          n_samples: 1000
+          n_features: 3
+          noise: 1.0
+          test_size: 0.2
+          seed: 42
+    outs:
+    - path: data/test.csv
+      hash: md5
+      md5: 3c0aedfcd86d8d5490d1ad37c38538c9
+      size: 15745
+    - path: data/train.csv
+      hash: md5
+      md5: 55a6faded673824c07ef3592932db16f
+      size: 63112
+  train:
+    cmd: python train.py
+    deps:
+    - path: data/train.csv
+      hash: md5
+      md5: 55a6faded673824c07ef3592932db16f
+      size: 63112
+    - path: train.py
+      hash: md5
+      md5: 1868a962a50b9cfdcbf3cf9452b22178
+      size: 535
+    outs:
+    - path: model.joblib
+      hash: md5
+      md5: fb1b9fabe7465891d407190370b6788b
+      size: 865
+  test:
+    cmd: python test.py
+    deps:
+    - path: data/test.csv
+      hash: md5
+      md5: 3c0aedfcd86d8d5490d1ad37c38538c9
+      size: 15745
+    - path: model.joblib
+      hash: md5
+      md5: fb1b9fabe7465891d407190370b6788b
+      size: 865
+    - path: test.py
+      hash: md5
+      md5: bcf2a2046ec5e69f80a1e3d573a0f703
+      size: 548
+    outs:
+    - path: data/predictions.csv
+      hash: md5
+      md5: 3179670898d70becd1423c7f688370d2
+      size: 7749
+  evaluate:
+    cmd: python evaluate.py
+    deps:
+    - path: data/predictions.csv
+      hash: md5
+      md5: 3179670898d70becd1423c7f688370d2
+      size: 7749
+    - path: evaluate.py
+      hash: md5
+      md5: 2db6e76f27089ea3b99dbd8c46a2a011
+      size: 715
+    outs:
+    - path: metrics.json
+      hash: md5
+      md5: 3432c1b62d2a8c69dbf794e0f5ed7f9a
+      size: 93

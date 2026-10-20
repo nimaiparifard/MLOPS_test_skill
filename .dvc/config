@@ -1,0 +1,6 @@
+[core]
+    remote = s3store
+['remote "s3store"']
+    url = s3://mybucket
+    endpointurl = http://localhost:9090
+    region = us-east-1

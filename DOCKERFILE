@@ -1,0 +1,13 @@
+# S3-compatible object storage (Adobe S3Mock)
+# (MinIO no longer publishes images/binaries, so this uses S3Mock instead.)
+# Note: stored objects are lost when the container is removed.
+#
+# Build: docker build -f DOCKERFILE -t local-s3 .
+# Run:   docker run -d --name s3 -p 9090:9090 local-s3
+#   S3 endpoint: http://localhost:9090  (any access key/secret works)
+#   Bucket "mybucket" is created on startup.
+FROM adobe/s3mock:latest
+
+ENV COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS=mybucket
+
+EXPOSE 9090

@@ -1,0 +1,36 @@
+stages:
+  create_dataset:
+    cmd: python create_dataset.py
+    deps:
+      - create_dataset.py
+    params:
+      - dataset
+    outs:
+      - data/train.csv
+      - data/test.csv
+
+  train:
+    cmd: python train.py
+    deps:
+      - train.py
+      - data/train.csv
+    outs:
+      - model.joblib
+
+  test:
+    cmd: python test.py
+    deps:
+      - test.py
+      - model.joblib
+      - data/test.csv
+    outs:
+      - data/predictions.csv
+
+  evaluate:
+    cmd: python evaluate.py
+    deps:
+      - evaluate.py
+      - data/predictions.csv
+    metrics:
+      - metrics.json:
+          cache: false
