@@ -4,3 +4,7 @@ dataset:
   noise: 1.0
   test_size: 0.2
   seed: 42
+
+extra_data:
+  n_samples: 500
+  seed: 7

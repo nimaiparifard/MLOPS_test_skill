@@ -9,7 +9,7 @@ MODEL_PATH = Path("model.joblib")
 
 
 def main():
-    train = pd.read_csv(DATA_DIR / "train.csv")
+    train = pd.read_csv(DATA_DIR / "train_full.csv")
     X, y = train.drop(columns="target"), train["target"]
 
     model = LinearRegression()

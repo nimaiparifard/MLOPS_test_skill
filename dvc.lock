@@ -27,18 +27,18 @@ stages:
   train:
     cmd: python train.py
     deps:
-    - path: data/train.csv
+    - path: data/train_full.csv
       hash: md5
-      md5: 55a6faded673824c07ef3592932db16f
-      size: 63112
+      md5: 02e217c7e29f1ee739fe9d09cc9cb8c3
+      size: 101152
     - path: train.py
       hash: md5
-      md5: 1868a962a50b9cfdcbf3cf9452b22178
-      size: 535
+      md5: 3ab5e2ec57a8846f6eda3ab11596b3e5
+      size: 540
     outs:
     - path: model.joblib
       hash: md5
-      md5: fb1b9fabe7465891d407190370b6788b
+      md5: 8a08baf2c8ff1b55819fbb3f54e87e0a
       size: 865
   test:
     cmd: python test.py
@@ -49,7 +49,7 @@ stages:
       size: 15745
     - path: model.joblib
       hash: md5
-      md5: fb1b9fabe7465891d407190370b6788b
+      md5: 8a08baf2c8ff1b55819fbb3f54e87e0a
       size: 865
     - path: test.py
       hash: md5
@@ -58,15 +58,15 @@ stages:
     outs:
     - path: data/predictions.csv
       hash: md5
-      md5: 3179670898d70becd1423c7f688370d2
-      size: 7749
+      md5: a4bfb344df52df6d2f85014008565f25
+      size: 7767
   evaluate:
     cmd: python evaluate.py
     deps:
     - path: data/predictions.csv
       hash: md5
-      md5: 3179670898d70becd1423c7f688370d2
-      size: 7749
+      md5: a4bfb344df52df6d2f85014008565f25
+      size: 7767
     - path: evaluate.py
       hash: md5
       md5: 2db6e76f27089ea3b99dbd8c46a2a011
@@ -74,5 +74,48 @@ stages:
     outs:
     - path: metrics.json
       hash: md5
-      md5: 3432c1b62d2a8c69dbf794e0f5ed7f9a
+      md5: a2de80156e6a09aada4e567ccecb6832
       size: 93
+  add_data:
+    cmd: python add_data.py
+    deps:
+    - path: add_data.py
+      hash: md5
+      md5: f6e2abbe805941d76e1282a06d0f0b2f
+      size: 1157
+    params:
+      params.yaml:
+        dataset:
+          n_samples: 1000
+          n_features: 3
+          noise: 1.0
+          test_size: 0.2
+          seed: 42
+        extra_data:
+          n_samples: 500
+          seed: 7
+    outs:
+    - path: data/extra.csv
+      hash: md5
+      md5: f4141ec9668082514883ca1ce22ddb5c
+      size: 39564
+  merge_data:
+    cmd: python merge_data.py
+    deps:
+    - path: data/extra.csv
+      hash: md5
+      md5: f4141ec9668082514883ca1ce22ddb5c
+      size: 39564
+    - path: data/train.csv
+      hash: md5
+      md5: 55a6faded673824c07ef3592932db16f
+      size: 63112
+    - path: merge_data.py
+      hash: md5
+      md5: 1935e4e646a6664fb2b1b3fda46a2dba
+      size: 406
+    outs:
+    - path: data/train_full.csv
+      hash: md5
+      md5: 02e217c7e29f1ee739fe9d09cc9cb8c3
+      size: 101152

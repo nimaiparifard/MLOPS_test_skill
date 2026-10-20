@@ -9,11 +9,30 @@ stages:
       - data/train.csv
       - data/test.csv
 
+  add_data:
+    cmd: python add_data.py
+    deps:
+      - add_data.py
+    params:
+      - dataset
+      - extra_data
+    outs:
+      - data/extra.csv
+
+  merge_data:
+    cmd: python merge_data.py
+    deps:
+      - merge_data.py
+      - data/train.csv
+      - data/extra.csv
+    outs:
+      - data/train_full.csv
+
   train:
     cmd: python train.py
     deps:
       - train.py
-      - data/train.csv
+      - data/train_full.csv
     outs:
       - model.joblib
 
