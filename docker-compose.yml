@@ -1,0 +1,52 @@
+# Start everything:  docker compose up -d --build
+# Stop:              docker compose down        (add -v to also delete the data volumes)
+services:
+  s3:
+    build:
+      context: .
+      dockerfile: DOCKERFILE
+    container_name: s3
+    ports:
+      - "9090:9090"      # S3 endpoint
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    container_name: mlflow
+    ports:
+      - "5000:5000"      # MLflow UI + tracking + registry
+    volumes:
+      - mlflow-data:/mlflow
+
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: airflow
+    depends_on:
+      - mlflow
+    ports:
+      - "8080:8080"      # Airflow UI (login is printed in `docker logs airflow`)
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      PIPELINE_DIR: /opt/pipeline
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      DVC_REMOTE: s3docker              # same bucket, but reached from inside Docker
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      GIT_CONFIG_COUNT: "1"             # the project folder belongs to another user
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: "*"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - .:/opt/pipeline                                   # the project (dvc.yaml, data, ...)
+      - ./orchestration/dags_airflow.py:/opt/airflow/dags/dags_airflow.py:ro
+      - airflow-data:/opt/airflow
+    command: standalone
+
+volumes:
+  mlflow-data:
+  airflow-data:

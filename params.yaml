@@ -1,10 +1,18 @@
-dataset:
-  n_samples: 1000
-  n_features: 3
-  noise: 1.0
-  test_size: 0.2
+generate:
   seed: 42
 
-extra_data:
-  n_samples: 500
-  seed: 7
+dataset:
+  task: credit        # credit (probability of default) | fraud (card fraud)
+  test_size: 0.15     # newest rows
+  val_size: 0.15      # the rows just before the test set
+
+tuning:
+  n_trials: 40
+  seed: 42
+  objective: roc_auc          # roc_auc | macro_f1 | accuracy | pr_auc (validation set)
+  max_train_rows: 50000       # stratified subsample of train.csv used while tuning
+  sweep_points: 7             # points per hyperparameter in the sensitivity line plots
+
+train:
+  seed: 42
+  learning_curve_fractions: [0.1, 0.2, 0.35, 0.5, 0.7, 0.85, 1.0]

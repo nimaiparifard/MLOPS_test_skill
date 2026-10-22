@@ -5,84 +5,150 @@ stages:
     deps:
     - path: create_dataset.py
       hash: md5
-      md5: b9daf914ef67fe4427fa88ab4392ba83
-      size: 1017
+      md5: b1478b5b8490adc15fe4c9a1a35b9c78
+      size: 1829
+      isexec: true
+    - path: data/risklens/card_transactions.csv
+      hash: md5
+      md5: 75a706e2b23140f0c08d4f8d3199bacd
+      size: 30922213
+    - path: data/risklens/credit_applications.csv
+      hash: md5
+      md5: d8ef33d971bfed0e22b45083972c9817
+      size: 6833986
     params:
       params.yaml:
         dataset:
-          n_samples: 1000
-          n_features: 3
-          noise: 1.0
-          test_size: 0.2
-          seed: 42
+          task: credit
+          test_size: 0.15
+          val_size: 0.15
     outs:
     - path: data/test.csv
       hash: md5
-      md5: 3c0aedfcd86d8d5490d1ad37c38538c9
-      size: 15745
+      md5: 38c7e3d325e914929f70ef76cc732b81
+      size: 792614
     - path: data/train.csv
       hash: md5
-      md5: 55a6faded673824c07ef3592932db16f
-      size: 63112
-  train:
-    cmd: python train.py
-    deps:
-    - path: data/train_full.csv
+      md5: 150d40236a37ca5ad04812bd08438395
+      size: 3698899
+    - path: data/val.csv
       hash: md5
-      md5: 02e217c7e29f1ee739fe9d09cc9cb8c3
-      size: 101152
+      md5: 763f19b63a3b4719208583ed16f42c08
+      size: 792949
+  train:
+    cmd: python -X utf8 train.py
+    deps:
+    - path: best_params.json
+      hash: md5
+      md5: 57a48d7249862a08dbdbbcaefcad28bd
+      size: 421
+    - path: data/train.csv
+      hash: md5
+      md5: 150d40236a37ca5ad04812bd08438395
+      size: 3698899
+    - path: data/val.csv
+      hash: md5
+      md5: 763f19b63a3b4719208583ed16f42c08
+      size: 792949
+    - path: ml_utils.py
+      hash: md5
+      md5: 996a73834734e676571c3c7a473bf453
+      size: 7388
+      isexec: true
+    - path: model_factory.py
+      hash: md5
+      md5: 9c441b8eb42fb8c705a5585c8cadcd4a
+      size: 1406
+      isexec: true
     - path: train.py
       hash: md5
-      md5: 3ab5e2ec57a8846f6eda3ab11596b3e5
-      size: 540
+      md5: 69d93fd89d8aeb179a79e1b595f47811
+      size: 4358
+      isexec: true
+    params:
+      params.yaml:
+        train:
+          seed: 42
+          learning_curve_fractions:
+          - 0.1
+          - 0.2
+          - 0.35
+          - 0.5
+          - 0.7
+          - 0.85
+          - 1.0
     outs:
     - path: model.joblib
       hash: md5
-      md5: 8a08baf2c8ff1b55819fbb3f54e87e0a
-      size: 865
+      md5: 6b558ba1d2008f39af3f5d996024fa2e
+      size: 5530
+    - path: threshold.json
+      hash: md5
+      md5: ebd2a09e10439a7f25528cd622c51709
+      size: 37
   test:
     cmd: python test.py
     deps:
     - path: data/test.csv
       hash: md5
-      md5: 3c0aedfcd86d8d5490d1ad37c38538c9
-      size: 15745
+      md5: 38c7e3d325e914929f70ef76cc732b81
+      size: 792614
     - path: model.joblib
       hash: md5
-      md5: 8a08baf2c8ff1b55819fbb3f54e87e0a
-      size: 865
+      md5: 6b558ba1d2008f39af3f5d996024fa2e
+      size: 5530
     - path: test.py
       hash: md5
-      md5: bcf2a2046ec5e69f80a1e3d573a0f703
-      size: 548
+      md5: 659be3004d59f39ffa61412cb077a147
+      size: 798
+      isexec: true
+    - path: threshold.json
+      hash: md5
+      md5: ebd2a09e10439a7f25528cd622c51709
+      size: 37
     outs:
     - path: data/predictions.csv
       hash: md5
-      md5: a4bfb344df52df6d2f85014008565f25
-      size: 7767
+      md5: e729b8e6dd313845a590d2732f8305c3
+      size: 266293
   evaluate:
     cmd: python evaluate.py
     deps:
     - path: data/predictions.csv
       hash: md5
-      md5: a4bfb344df52df6d2f85014008565f25
-      size: 7767
+      md5: e729b8e6dd313845a590d2732f8305c3
+      size: 266293
     - path: evaluate.py
       hash: md5
-      md5: 2db6e76f27089ea3b99dbd8c46a2a011
-      size: 715
+      md5: 078aa3d4fb64d507490d0ef0f290b06c
+      size: 1218
+      isexec: true
+    - path: ml_utils.py
+      hash: md5
+      md5: 996a73834734e676571c3c7a473bf453
+      size: 7388
+      isexec: true
+    - path: threshold.json
+      hash: md5
+      md5: ebd2a09e10439a7f25528cd622c51709
+      size: 37
     outs:
     - path: metrics.json
       hash: md5
-      md5: a2de80156e6a09aada4e567ccecb6832
-      size: 93
+      md5: e02d1eacec5fd748d9ebbdd38d82d3d3
+      size: 242
+    - path: plots
+      hash: md5
+      md5: 3870d2ebd91f275ee2b0965ee32c8d2c.dir
+      size: 94923
+      nfiles: 3
   add_data:
     cmd: python add_data.py
     deps:
     - path: add_data.py
       hash: md5
-      md5: f6e2abbe805941d76e1282a06d0f0b2f
-      size: 1157
+      md5: 15b3fdcaa802c9dce4f7d051b9d62162
+      size: 1196
     params:
       params.yaml:
         dataset:
@@ -90,6 +156,7 @@ stages:
           n_features: 3
           noise: 1.0
           test_size: 0.2
+          val_size: 0.1
           seed: 42
         extra_data:
           n_samples: 500
@@ -108,14 +175,147 @@ stages:
       size: 39564
     - path: data/train.csv
       hash: md5
-      md5: 55a6faded673824c07ef3592932db16f
-      size: 63112
+      md5: 16b66c526e3e755453ce18eb52feb54b
+      size: 55234
+    - path: data/val.csv
+      hash: md5
+      md5: 14c2db9aeb3e57a68b3324631413ae32
+      size: 7895
     - path: merge_data.py
       hash: md5
-      md5: 1935e4e646a6664fb2b1b3fda46a2dba
-      size: 406
+      md5: ea2e764d9abbbdb73085e98926f11b00
+      size: 1183
+    params:
+      params.yaml:
+        dataset.seed: 42
+        dataset.test_size: 0.2
+        dataset.val_size: 0.1
     outs:
     - path: data/train_full.csv
       hash: md5
-      md5: 02e217c7e29f1ee739fe9d09cc9cb8c3
-      size: 101152
+      md5: 10b3f126e6bc76d700586b7a501c4411
+      size: 88458
+    - path: data/val_full.csv
+      hash: md5
+      md5: 0f573baa74cfdd90fa6e72dfe19b553d
+      size: 12711
+  validate_data:
+    cmd: python validate_data.py
+    deps:
+    - path: data/test.csv
+      hash: md5
+      md5: 3c0aedfcd86d8d5490d1ad37c38538c9
+      size: 15745
+    - path: data/train_full.csv
+      hash: md5
+      md5: 10b3f126e6bc76d700586b7a501c4411
+      size: 88458
+    - path: data/val_full.csv
+      hash: md5
+      md5: 0f573baa74cfdd90fa6e72dfe19b553d
+      size: 12711
+    - path: data_contract.py
+      hash: md5
+      md5: a77a390197d84c0473d5541ed52a18e9
+      size: 1114
+    - path: validate_data.py
+      hash: md5
+      md5: 680dda982993d910e44e93dec45985c7
+      size: 954
+    params:
+      params.yaml:
+        dataset.n_features: 3
+    outs:
+    - path: validation_report.json
+      hash: md5
+      md5: 502642fefaa655d1042c1d22850f0f2d
+      size: 117
+  register_model:
+    cmd: python -X utf8 register_model.py
+    deps:
+    - path: metrics.json
+      hash: md5
+      md5: e02d1eacec5fd748d9ebbdd38d82d3d3
+      size: 242
+    - path: model.joblib
+      hash: md5
+      md5: 6b558ba1d2008f39af3f5d996024fa2e
+      size: 5530
+    - path: plots
+      hash: md5
+      md5: 3870d2ebd91f275ee2b0965ee32c8d2c.dir
+      size: 94923
+      nfiles: 3
+    - path: register_model.py
+      hash: md5
+      md5: 04eaebc3a4ed22f9da99932da2909bbc
+      size: 3178
+      isexec: true
+    params:
+      params.yaml:
+        dataset:
+          task: credit
+          test_size: 0.15
+          val_size: 0.15
+    outs:
+    - path: registry.json
+      hash: md5
+      md5: e49195dd1931f585ca2d1ef2dbd986d8
+      size: 48
+  tune:
+    cmd: python -X utf8 tuning_experiment.py
+    deps:
+    - path: data/train.csv
+      hash: md5
+      md5: 150d40236a37ca5ad04812bd08438395
+      size: 3698899
+    - path: data/val.csv
+      hash: md5
+      md5: 763f19b63a3b4719208583ed16f42c08
+      size: 792949
+    - path: ml_utils.py
+      hash: md5
+      md5: 996a73834734e676571c3c7a473bf453
+      size: 7388
+      isexec: true
+    - path: model_factory.py
+      hash: md5
+      md5: 9c441b8eb42fb8c705a5585c8cadcd4a
+      size: 1406
+      isexec: true
+    - path: tuning_experiment.py
+      hash: md5
+      md5: 6824736ad0a6cc9cccdf7353b9dd6426
+      size: 14102
+      isexec: true
+    params:
+      params.yaml:
+        tuning:
+          n_trials: 40
+          seed: 42
+          objective: roc_auc
+          max_train_rows: 50000
+          sweep_points: 7
+    outs:
+    - path: best_params.json
+      hash: md5
+      md5: 57a48d7249862a08dbdbbcaefcad28bd
+      size: 421
+  generate_data:
+    cmd: python generate_risklens_data.py --seed 42
+    deps:
+    - path: generate_risklens_data.py
+      hash: md5
+      md5: bb1f7f9d8a69fafc9f96c38adbdc6eff
+      size: 20144
+      isexec: true
+    params:
+      params.yaml:
+        generate:
+          seed: 42
+    outs:
+    - path: data/risklens
+      hash: md5
+      md5: 36d9f5f408897a67b70c947b665f30e4.dir
+      size: 49916533
+      nfiles: 5

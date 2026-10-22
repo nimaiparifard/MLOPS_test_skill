@@ -1,6 +1,11 @@
 [core]
     remote = s3store
+    autostage = true
 ['remote "s3store"']
     url = s3://mybucket
     endpointurl = http://localhost:9090
+    region = us-east-1
+['remote "s3docker"']
+    url = s3://mybucket
+    endpointurl = http://host.docker.internal:9090
     region = us-east-1

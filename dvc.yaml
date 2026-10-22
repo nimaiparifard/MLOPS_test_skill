@@ -1,55 +1,89 @@
 stages:
-  create_dataset:
-    cmd: python create_dataset.py
+  generate_data:
+    cmd: python -m pipeline.generate_risklens_data --seed ${generate.seed}
     deps:
-      - create_dataset.py
+      - pipeline/generate_risklens_data.py
+    params:
+      - generate
+    outs:
+      - data/risklens
+
+  create_dataset:
+    cmd: python -m pipeline.create_dataset
+    deps:
+      - pipeline/create_dataset.py
+      - mlcore
+      - data/risklens/credit_applications.csv
+      - data/risklens/card_transactions.csv
     params:
       - dataset
     outs:
       - data/train.csv
+      - data/val.csv
       - data/test.csv
 
-  add_data:
-    cmd: python add_data.py
+  tune:
+    cmd: python -X utf8 -m pipeline.tuning_experiment
     deps:
-      - add_data.py
-    params:
-      - dataset
-      - extra_data
-    outs:
-      - data/extra.csv
-
-  merge_data:
-    cmd: python merge_data.py
-    deps:
-      - merge_data.py
+      - pipeline/tuning_experiment.py
+      - mlcore
       - data/train.csv
-      - data/extra.csv
+      - data/val.csv
+    params:
+      - tuning
     outs:
-      - data/train_full.csv
+      - best_params.json:
+          cache: false
 
   train:
-    cmd: python train.py
+    cmd: python -X utf8 -m pipeline.train
     deps:
-      - train.py
-      - data/train_full.csv
+      - pipeline/train.py
+      - mlcore
+      - data/train.csv
+      - data/val.csv
+      - best_params.json
+    params:
+      - train
     outs:
       - model.joblib
+      - threshold.json:
+          cache: false
 
   test:
-    cmd: python test.py
+    cmd: python -m pipeline.test
     deps:
-      - test.py
+      - pipeline/test.py
+      - mlcore
       - model.joblib
+      - threshold.json
       - data/test.csv
     outs:
       - data/predictions.csv
 
   evaluate:
-    cmd: python evaluate.py
+    cmd: python -m pipeline.evaluate
     deps:
-      - evaluate.py
+      - pipeline/evaluate.py
+      - mlcore
       - data/predictions.csv
+      - threshold.json
     metrics:
       - metrics.json:
+          cache: false
+    outs:
+      - plots
+
+  register_model:
+    cmd: python -X utf8 -m pipeline.register_model
+    deps:
+      - pipeline/register_model.py
+      - mlcore
+      - model.joblib
+      - metrics.json
+      - plots
+    params:
+      - dataset
+    outs:
+      - registry.json:
           cache: false

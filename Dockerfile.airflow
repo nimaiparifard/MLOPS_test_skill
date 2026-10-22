@@ -1,0 +1,29 @@
+# Airflow (UI + scheduler) that runs the DAG in orchestration/dags_airflow.py
+#
+# The pipeline's own packages (dvc, mlflow, optuna, scikit-learn ...) live in a separate
+# virtualenv, so they cannot clash with Airflow's pinned dependencies.
+# They are installed in several layers so a failed download only repeats one small step.
+FROM apache/airflow:3.1.0-python3.12
+
+ENV PIP="/home/airflow/pipeline-venv/bin/pip install --no-cache-dir --retries 10 --default-timeout 120"
+
+RUN python -m venv /home/airflow/pipeline-venv \
+ && /home/airflow/pipeline-venv/bin/pip install --no-cache-dir --upgrade pip
+
+# xgboost-cpu = the same `xgboost` module without the 300 MB GPU libraries (not needed here)
+RUN $PIP numpy pandas scikit-learn joblib pyyaml matplotlib plotly pandera xgboost-cpu lightgbm optuna
+RUN $PIP mlflow==3.15.1
+RUN $PIP dvc
+RUN $PIP dvc-s3
+
+# lightgbm / xgboost need the OpenMP runtime
+USER root
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libgomp1 \
+ && rm -rf /var/lib/apt/lists/*
+USER airflow
+
+# libgit2 (used by dvc) refuses repos owned by another user, e.g. the mounted project folder
+COPY --chown=airflow:root gitconfig /home/airflow/.gitconfig
+
+ENV PIPELINE_PYTHON=/home/airflow/pipeline-venv/bin/python

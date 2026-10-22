@@ -1,0 +1,24 @@
+# MLflow tracking server + model registry + web UI
+#
+# Build: docker build -f Dockerfile.mlflow -t local-mlflow .
+# Run:   docker run -d --name mlflow -p 5000:5000 -v mlflow-data:/mlflow local-mlflow
+#   UI / API: http://localhost:5000
+FROM python:3.12-slim
+
+# keep the server version equal to the client version in requirements.txt
+RUN pip install --no-cache-dir mlflow==3.15.1 boto3
+
+# runs, params, metrics and the model registry live in a sqlite file,
+# model files are stored under /mlflow/artifacts (both are in the volume)
+VOLUME /mlflow
+EXPOSE 5000
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=10 \
+  CMD python -c "import urllib.request as u; u.urlopen('http://localhost:5000/health')"
+
+CMD ["mlflow", "server", \
+     "--host", "0.0.0.0", "--port", "5000", \
+     "--backend-store-uri", "sqlite:////mlflow/mlflow.db", \
+     "--artifacts-destination", "/mlflow/artifacts", \
+     "--serve-artifacts", \
+     "--allowed-hosts", "*"]

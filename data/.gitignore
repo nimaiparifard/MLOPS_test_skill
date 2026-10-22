@@ -3,3 +3,6 @@
 /predictions.csv
 /extra.csv
 /train_full.csv
+/val.csv
+/val_full.csv
+/risklens

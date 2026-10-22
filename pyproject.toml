@@ -1,0 +1,14 @@
+[tool.ruff]
+line-length = 120
+# legacy/ is the old, unmaintained pipeline (it still reads params that no longer exist)
+extend-exclude = ["legacy", "mlruns", "mlartifacts"]
+
+[tool.ruff.lint]
+# F = pyflakes (unused / undefined names), E9 = syntax errors, I = import order.
+# Line length (E501) is left to the editor: the existing code has a few long lines.
+select = ["F", "E9", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]  # lets tests import mlcore / pipeline without installing the project
+markers = ["slow: end-to-end test that runs the real pipeline scripts on a small dataset"]

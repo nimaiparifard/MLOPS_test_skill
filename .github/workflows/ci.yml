@@ -1,0 +1,101 @@
+name: CI
+
+# When the workflow runs: on every push to the main branches and on every pull request.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+# A new push to the same branch cancels the run that is still going (saves minutes).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# The workflow only needs to read the repository.
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"   # same minor version as local development
+  DVC_NO_ANALYTICS: "true" # do not send usage statistics from CI
+
+jobs:
+  # ---------------------------------------------------------------- 1. lint (seconds)
+  # Cheapest check first: catches unused / undefined names and syntax errors before anything is installed.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install ruff
+      - run: ruff check .           # rules live in pyproject.toml
+
+  # ---------------------------------------------------------------- 2. unit + small end-to-end tests
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip                                   # reuse downloaded wheels between runs
+          cache-dependency-path: requirements*.txt     # ...until a requirements file changes
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -v                                 # tests/ - includes the tiny end-to-end test
+
+  # ---------------------------------------------------------------- 3. the real ML pipeline, reduced
+  # Runs generate -> create_dataset -> tune -> train -> test -> evaluate through DVC, then checks the
+  # model quality. Only starts when lint and tests are green (no point training broken code).
+  pipeline:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # MLflow 3.x refuses the plain-folder store, so CI logs to a throw-away SQLite file.
+      MLFLOW_TRACKING_URI: sqlite:///mlflow-ci.db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+
+      # `dvc exp run` records its result as a git commit, so git needs an identity.
+      - name: Configure git identity for DVC
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+
+      # No `dvc pull`: generate_data is deterministic (seed in params.yaml), so DVC rebuilds the data
+      # from code and CI needs no access to the S3 remote or its credentials.
+      # `evaluate` = run every stage up to evaluate. register_model is skipped on purpose: it needs a
+      # real MLflow registry server. The -S flags shrink the run (4 Optuna trials instead of 40,
+      # 5k tuning rows, fewer sweep points / learning-curve points) so it takes ~1 minute, not ~1 hour.
+      - name: Run the pipeline (reduced settings)
+        run: >
+          dvc exp run evaluate
+          -S tuning.n_trials=4
+          -S tuning.max_train_rows=5000
+          -S tuning.sweep_points=3
+          -S "train.learning_curve_fractions=[0.5,1.0]"
+
+      # Quality gate: fails the build when metrics.json is broken or the model is worse than the floors.
+      - name: Check model quality
+        run: python ci/check_metrics.py --min-roc-auc 0.75 --min-pr-auc 0.20
+
+      # Keep the evidence: download it from the run page to see what CI produced.
+      - name: Upload metrics and plots
+        if: always()          # also upload when the gate failed - that is when you need them
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-report
+          path: |
+            metrics.json
+            threshold.json
+            best_params.json
+            plots/
+          if-no-files-found: warn

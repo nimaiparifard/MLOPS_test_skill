@@ -5,3 +5,9 @@ joblib
 pyyaml
 dvc
 dvc-s3
+optuna
+mlflow
+plotly
+matplotlib
+xgboost
+lightgbm

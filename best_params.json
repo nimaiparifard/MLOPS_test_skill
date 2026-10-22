@@ -1,0 +1,18 @@
+{
+  "model": "logistic_regression",
+  "params": {
+    "C": 16.35032755871352,
+    "class_weight": null,
+    "max_iter": 2000
+  },
+  "objective": "roc_auc",
+  "value": 0.8898162697461233,
+  "val_metrics": {
+    "accuracy": 0.9133333333333333,
+    "macro_f1": 0.7372024322925652,
+    "roc_auc": 0.8898162697461233,
+    "pr_auc": 0.527823820301989,
+    "precision": 0.5035460992907801,
+    "recall": 0.5419847328244275
+  }
+}

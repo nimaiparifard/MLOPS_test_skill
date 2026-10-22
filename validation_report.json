@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "rows": {
+    "train_full.csv": 1137,
+    "val_full.csv": 163,
+    "test.csv": 200
+  }
+}
